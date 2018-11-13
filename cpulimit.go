@@ -83,7 +83,7 @@ func (l *Limiter) run() {
 			}
 		}
 		counter++
-		if counter > 2 {
+		if counter > l.Measurements-1 {
 			counter = 0
 		}
 	}
