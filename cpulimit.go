@@ -10,15 +10,23 @@ import (
 const defaultLimit float64 = 80.0
 
 type Limiter struct {
-	MaxCPUUsage float64
-	stop        bool
-	wg          *sync.WaitGroup
-	mutex       *sync.RWMutex
+	MaxCPUUsage     float64
+	MeasureInterval time.Duration
+	Measurements    int
+	stop            bool
+	wg              *sync.WaitGroup
+	mutex           *sync.RWMutex
 }
 
 func (l *Limiter) Start() {
 	if l.MaxCPUUsage == 0.0 {
 		l.MaxCPUUsage = defaultLimit
+	}
+	if l.MeasureInterval == 0 {
+		l.MeasureInterval = time.Millisecond * 500
+	}
+	if l.Measurements == 0 {
+		l.Measurements = 3
 	}
 	l.wg = &sync.WaitGroup{}
 	l.mutex = &sync.RWMutex{}
@@ -45,9 +53,9 @@ func (l *Limiter) run() {
 		all2     float64
 		cpuUsage float64
 		locked   bool
-		m        = make([]float64, 4) // measurements
+		m        = make([]float64, l.Measurements) // measurements
 	)
-	tk := time.NewTicker(time.Millisecond * 500)
+	tk := time.NewTicker(l.MeasureInterval)
 	defer tk.Stop()
 	busy2, all2 = getBusy()
 	var counter int
@@ -63,7 +71,7 @@ func (l *Limiter) run() {
 		busy2, all2 = getBusy()
 		cpuUsage = getCPUUsage(busy1, all1, busy2, all2)
 		m[counter] = cpuUsage
-		if (m[0]+m[1]+m[2]+m[3])/4.0 > l.MaxCPUUsage {
+		if average(m) > l.MaxCPUUsage {
 			if !locked {
 				l.mutex.Lock()
 				locked = true
@@ -75,10 +83,18 @@ func (l *Limiter) run() {
 			}
 		}
 		counter++
-		if counter > 3 {
+		if counter > 2 {
 			counter = 0
 		}
 	}
+}
+
+func average(m []float64) (avg float64) {
+	for _, elem := range m {
+		avg += elem
+	}
+	avg /= float64(len(m))
+	return
 }
 
 func getBusy() (busy, all float64) {
