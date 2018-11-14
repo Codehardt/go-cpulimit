@@ -8,7 +8,7 @@ With **go-cpulimit** you can limit the CPU usage of your go program. It provides
 
 You should use this `Wait()` function in as many situations as possible, e.g. on every iteration in a `for loop`.
 
-**Warning:** This limiter does not work, there are insufficient `Wait()` calls.
+**Warning:** This limiter does not work, if there are insufficient `Wait()` calls.
 
 ## Example
 
