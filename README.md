@@ -10,6 +10,8 @@ You should use this `Wait()` function in as many situations as possible, e.g. on
 
 **Warning:** This limiter does not work, if there are insufficient `Wait()` calls.
 
+This package requires [github.com/shirou/gopsutil](https://github.com/shirou/gopsutil) *(Copyright (c) 2014, WAKAYAMA Shirou)* to be installed.
+
 ## Example
 
 ```golang

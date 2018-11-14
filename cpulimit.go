@@ -7,8 +7,16 @@ import (
 	"github.com/shirou/gopsutil/cpu"
 )
 
-const defaultLimit float64 = 80.0
+const (
+	// DefaultLimit is 80%
+	DefaultLimit float64 = 80.0
+	// DefaultInterval is 333 ms
+	DefaultInterval time.Duration = time.Millisecond * 333
+	// DefaultMeasurements is 3
+	DefaultMeasurements int = 3
+)
 
+// Limiter limits the CPU usage
 type Limiter struct {
 	MaxCPUUsage     float64
 	MeasureInterval time.Duration
@@ -18,15 +26,17 @@ type Limiter struct {
 	mutex           *sync.RWMutex
 }
 
+// Start starts the CPU limiter. If there are undefined variables
+// Start() will set them to the default values.
 func (l *Limiter) Start() {
 	if l.MaxCPUUsage == 0.0 {
-		l.MaxCPUUsage = defaultLimit
+		l.MaxCPUUsage = DefaultLimit
 	}
 	if l.MeasureInterval == 0 {
-		l.MeasureInterval = time.Millisecond * 500
+		l.MeasureInterval = DefaultInterval
 	}
 	if l.Measurements == 0 {
-		l.Measurements = 3
+		l.Measurements = DefaultMeasurements
 	}
 	l.wg = &sync.WaitGroup{}
 	l.mutex = &sync.RWMutex{}
@@ -34,11 +44,13 @@ func (l *Limiter) Start() {
 	go l.run()
 }
 
+// Stop stops the limiter. After this stop, Wait() won't block anymore.
 func (l *Limiter) Stop() {
 	l.stop = true
 	l.wg.Wait()
 }
 
+// Wait waits until the CPU usage is below MaxCPUUsage
 func (l *Limiter) Wait() {
 	l.mutex.RLock()
 	l.mutex.RUnlock()
