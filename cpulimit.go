@@ -115,7 +115,7 @@ func getBusy() (busy, all float64) {
 		panic(err)
 	}
 	t := ts[0]
-	busy = t.User + t.System + t.Nice + t.Iowait + t.Irq + t.Softirq + t.Steal + t.Guest + t.GuestNice + t.Stolen
+	busy = t.User + t.System + t.Nice + t.Iowait + t.Irq + t.Softirq + t.Steal + t.Guest + t.GuestNice
 	all = busy + t.Idle
 	return
 }
